@@ -1,0 +1,26 @@
+version: "3.7"
+services:
+  mariadb:
+    container_name: jeedom-db
+    restart: always
+    image: "mariadb:latest"
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: jeedom
+      MYSQL_USER: jeedom
+      MYSQL_PASSWORD: jeedom
+    volumes:
+      - ./mysql:/var/lib/mysql
+
+  jeedom:
+    container_name: jeedom-server
+    restart: always
+    image: "jeedom/jeedom:master"
+    volumes:
+      - ./www:/var/www
+    ports:
+      - "8022:22"
+      - "8080:80"
+    depends_on:
+      - mariadb
+
