@@ -6,11 +6,18 @@ services:
     image: "mariadb:latest"
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
-      MYSQL_DATABASE: jeedom
-      MYSQL_USER: jeedom
-      MYSQL_PASSWORD: j11d0m!
+      MYSQL_DATABASE: jeedom99
+      MYSQL_USER: jeedom99
+      MYSQL_PASSWORD: jeedom99
     volumes:
       - ./mysql:/var/lib/mysql
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.tcp.routers.mysql.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mysql.entryPoints=mysql"
+      - "traefik.tcp.services.mysql-svc.loadbalancer.server.port=3306"
+      - "traefik.tcp.routers.mysql.service=mysql-svc"
 
   jeedom:
     container_name: jeedom-server
@@ -18,54 +25,26 @@ services:
     restart: always
     image: "jeedom/jeedom:master"
     environment:
-       APACHE_PORT: 9080
+       APACHE_PORT: 9081
        SSH_PORT: 9022
        MODE_HOST: 1
     volumes:
       - ./www:/var/www
-    #ports:
-    #  - "8022:22"
-    #  - "8081:80"
     depends_on:
       - mariadb
 
   traefik:
     image: traefik:v2.1
+    container_name: reverse_proxy
+    #networks: 
+    #  - traefik
     ports:
       - "10443:443"
-      - "8080:8080"  # internal dashboard
-    environment:
-      TRAEFIK_ENTRYPOINTS_WEBSECURE: "true"
-      TRAEFIK_ENTRYPOINTS_WEBSECURE_ADDRESS: ":443"
-      #TRAEFIK_ENTRYPOINTS_WEB: "true"
-      #TRAEFIK_ENTRYPOINTS_WEB_ADDRESS: ":80"
-      TRAEFIK_API: "true"
-      TRAEFIK_API_DASHBOARD: "true"
-      TRAEFIK_API_INSECURE: "true"
-      #TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_EMAIL: ${ACME_EMAIL}
-      #TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_STORAGE: "/letsencrypt/acme.json"
-      #TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_TLSCHALLENGE: "true"
-      #TRAEFIK_CERTIFICATESRESOLVERS_LETSENCRYPT_ACME_DNSCHALLENGE_PROVIDER: "duckdns"
-      #DUCKDNS_TOKEN: ${DOMAIN_TOKEN}
-      TRAEFIK_PROVIDERS_DOCKER: "true"
-      TRAEFIK_PROVIDERS_DOCKER_EXPOSEDBYDEFAULT: "false"
-      TRAEFIK_PROVIDERS_FILE_DIRECTORY: "/etc/traefik/dynamic/"
+      - "9080:8080"  # internal dashboard
+      - "3307:3306"
     volumes:
       #- ${ROOT_DATA}/letsencrypt:/letsencrypt
-      #- ${ROOT_DATA}/traefik:/etc/traefik
+      - "./traefik/traefik.toml:/etc/traefik/traefik.toml"
+      - "./traefik/dynamic_conf.toml:/etc/traefik/dynamic_conf.toml"
       - "/var/run/docker.sock:/var/run/docker.sock"
-    labels:
-      traefik.enable: "true"
-      #traefik.http.middlewares.secured.chain.middlewares: "auth-users, test-ratelimit"
-      #traefik.http.middlewares.auth-users.basicauth.users: "${BASIC_AUTH}"
-      #traefik.http.middlewares.known-ips.ipwhitelist.sourceRange: "${WHITELIST_RANGE}"
-      #traefik.http.middlewares.test-ratelimit.ratelimit.average: "100"
-      #traefik.http.middlewares.test-ratelimit.ratelimit.burst: "100"
-      #traefik.http.routers.hass.rule: "Host(`${HOME_DOMAIN}`)"
-      #traefik.http.routers.hass.service: "hass@file"
-      #traefik.http.routers.hass.entrypoints: "websecure"
-      #traefik.http.routers.hass.tls: "true"
-      #traefik.http.routers.hass.tls.certresolver: "letsencrypt"
-      #traefik.http.routers.hass.tls.domains[0].main: "${HOME_DOMAIN}"
-      #traefik.http.routers.hass.tls.domains[0].sans: "*.${HOME_DOMAIN}"
     restart: unless-stopped

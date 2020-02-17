@@ -1,0 +1,28 @@
+# dynamic_conf.toml
+[http]
+  [http.routers]
+    [http.routers.redirect-to-https]
+      entryPoints = ["web"]
+      middlewares = ["https-redirect"]
+      rule = "HostRegexp(`{host:.+}`)"
+      service = "noop"
+
+    [http.routers.jeedom]
+      entryPoints = ["web-secure"]
+      #rule = "Host('jeedom.localhost')" # you probably want to customize this rule
+      rule = "PathPrefix(`/`)"
+      service = "jeedom"
+
+  [http.middlewares]
+    [http.middlewares.https-redirect.redirectScheme]
+      scheme = "https"
+
+  [http.services]
+    [http.services.jeedom.loadBalancer]
+      [[http.services.jeedom.loadBalancer.servers]]
+        url = "http://172.17.0.1:9081" # 172.17.0.1 is the docker0 interface: a way to communicate outside of docker (ie with home assistant on the host network)
+
+    # noop service, the URL will be never called
+    [http.services.noop.loadBalancer]
+      [[http.services.noop.loadBalancer.servers]]
+        url = "http://192.168.0.1"
