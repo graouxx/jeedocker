@@ -4,8 +4,6 @@ services:
     container_name: jeedom-db
     restart: always
     image: "mariadb:latest"
-#    ports:
-#      - "3306:3306"
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_DATABASE: jeedom99
@@ -41,12 +39,14 @@ services:
   traefik:
     image: traefik:v2.1
     container_name: reverse_proxy
+    environment:
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
     ports:
       - "443:443"
       - "9080:8080"  # internal dashboard
       - "3306:3306"
     volumes:
-      #- "./letsencrypt:/letsencrypt"
+      - "./letsencrypt:/letsencrypt"
       - "./traefik/traefik.toml:/etc/traefik/traefik.toml"
       - "./traefik/dynamic_conf.toml:/etc/traefik/dynamic_conf.toml"
       - "/var/run/docker.sock:/var/run/docker.sock"
