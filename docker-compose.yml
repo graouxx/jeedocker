@@ -1,0 +1,58 @@
+version: "3.7"
+services:
+  mariadb:
+    container_name: jeedom-db
+    restart: always
+    image: "mariadb:latest"
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: jeedom99
+      MYSQL_USER: jeedom99
+      MYSQL_PASSWORD: jeedom99
+    volumes:
+      - ./mysql:/var/lib/mysql
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.tcp.routers.mysql.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mysql.entryPoints=mysql"
+      - "traefik.tcp.services.mysql-svc.loadbalancer.server.port=3306"
+      - "traefik.tcp.routers.mysql.service=mysql-svc"
+
+  jeedom:
+    container_name: jeedom-server
+    network_mode: host
+    restart: always
+    image: "jeedom/jeedom:master"
+    environment:
+       APACHE_PORT: 9081
+       SSH_PORT: 9022
+       MODE_HOST: 1
+    volumes:
+      - ./www:/var/www
+    depends_on:
+      - mariadb
+    devices:
+      - "${RFXCOM}:/dev/ttyACM0"
+      - "${ZIGATE}:/dev/ttyACM1"
+
+  traefik:
+    image: traefik:v2.1
+    container_name: reverse_proxy
+    command:
+      - "--certificatesresolvers.mydnschallenge.acme.email=${ACME_EMAIL}"
+    environment:
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
+    labels:
+      traefik.http.routers.jeedom.tls.domain[0].main: "${HOME_DOMAIN}"
+      traefik.http.routers.jeedom.tls.domain[0].sans: "*.${HOME_DOMAIN}"
+    ports:
+      - "943:443"
+      - "9080:8080"  # internal dashboard
+      - "3307:3306"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "./traefik/traefik.toml:/etc/traefik/traefik.toml"
+      - "./traefik/dynamic_conf.toml:/etc/traefik/dynamic_conf.toml"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    restart: unless-stopped

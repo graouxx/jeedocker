@@ -1,0 +1,32 @@
+# traefik.toml
+[global]
+  checkNewVersion = true
+  sendAnonymousUsage = true
+
+[api]
+  dashboard = true
+  insecure = true
+
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+  [entryPoints.web-secure]
+    address = ":443"
+  [entryPoints.mysql]
+    address = ":3306"
+
+[providers]
+  [providers.docker]
+    watch = true
+    endpoint = "unix:///var/run/docker.sock"
+    exposedbydefault = false
+
+  [providers.file]
+    filename = "/etc/traefik/dynamic_conf.toml"
+
+[certificatesResolvers]
+  [certificatesResolvers.mydnschallenge.acme]
+    #email = "${ACME_EMAIL}"
+    storage = "/letsencrypt/acme.json"
+    [certificatesResolvers.mydnschallenge.acme.dnsChallenge]
+       provider = "duckdns"
