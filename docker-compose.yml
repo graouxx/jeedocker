@@ -6,9 +6,9 @@ services:
     image: "mariadb:latest"
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
-      MYSQL_DATABASE: jeedom
-      MYSQL_USER: jeedom
-      MYSQL_PASSWORD: jeedom
+      MYSQL_DATABASE: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PWD}
     volumes:
       - ./mysql:/var/lib/mysql
     labels:
@@ -19,11 +19,23 @@ services:
       - "traefik.tcp.services.mysql-svc.loadbalancer.server.port=3306"
       - "traefik.tcp.routers.mysql.service=mysql-svc"
 
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.tcp.routers.mosquitto.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mosquitto.entryPoints=mosquitto"
+      - "traefik.tcp.services.mosquitto-svc.loadbalancer.server.port=1883"
+      - "traefik.tcp.routers.mosquitto.service=mosquitto-svc"
+
   jeedom:
     container_name: jeedom-server
     network_mode: host
     restart: always
-    image: "jeedom/jeedom:master"
+    image: "jeedom/jeedom:latest"
     environment:
        APACHE_PORT: 9081
        SSH_PORT: 9022
@@ -47,9 +59,10 @@ services:
       traefik.http.routers.jeedom.tls.domain[0].main: "${HOME_DOMAIN}"
       traefik.http.routers.jeedom.tls.domain[0].sans: "*.${HOME_DOMAIN}"
     ports:
-      - "443:443"
+      - "943:443"
       - "9080:8080"  # internal dashboard
       - "3307:3306"
+      - "1884:1883"
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "./traefik/traefik.toml:/etc/traefik/traefik.toml"
