@@ -6,9 +6,9 @@ services:
     image: "mariadb:latest"
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
-      MYSQL_DATABASE: jeedom99
-      MYSQL_USER: jeedom99
-      MYSQL_PASSWORD: jeedom99
+      MYSQL_DATABASE: jeedom
+      MYSQL_USER: jeedom
+      MYSQL_PASSWORD: jeedom
     volumes:
       - ./mysql:/var/lib/mysql
     labels:
@@ -47,7 +47,7 @@ services:
       traefik.http.routers.jeedom.tls.domain[0].main: "${HOME_DOMAIN}"
       traefik.http.routers.jeedom.tls.domain[0].sans: "*.${HOME_DOMAIN}"
     ports:
-      - "943:443"
+      - "443:443"
       - "9080:8080"  # internal dashboard
       - "3307:3306"
     volumes:

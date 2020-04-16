@@ -13,10 +13,7 @@
       rule = "PathPrefix(`/`)"
       service = "jeedom"
       [http.routers.jeedom.tls]
-      certResolver = "mydnschallenge" # From static configuration
-      #[[http.routers.jeedom.tls.domains]]
-      #  main = "${HOME_DOMAIN}"
-      #  sans = ["*.${HOME_DOMAIN}"]
+        certResolver = "mydnschallenge" # From static configuration
 
   [http.middlewares]
     [http.middlewares.https-redirect.redirectScheme]

@@ -26,7 +26,6 @@
 
 [certificatesResolvers]
   [certificatesResolvers.mydnschallenge.acme]
-    #email = "${ACME_EMAIL}"
     storage = "/letsencrypt/acme.json"
     [certificatesResolvers.mydnschallenge.acme.dnsChallenge]
        provider = "duckdns"
