@@ -36,7 +36,7 @@ Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/srv/docker
 ExecStart=/usr/local/bin/docker-compose up -d
-ExecStop=/usr/local/bin/docker-compose down
+ExecStop=/usr/local/bin/docker-compose stop
 TimeoutStartSec=0
 
 [Install]
